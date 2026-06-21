@@ -1,6 +1,6 @@
 # R5Reloaded Launcher
 
-Desktop launcher for R5Reloaded, built with Tauri, React, and TypeScript.
+Built with Tauri, React, and TypeScript.
 
 ## Stack
 
