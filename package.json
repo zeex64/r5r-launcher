@@ -1,0 +1,38 @@
+{
+  "name": "r5r-launcher",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "node scripts/tauri-with-checksum.mjs"
+  },
+  "dependencies": {
+    "@fontsource/barlow": "^5.2.8",
+    "@fontsource/barlow-semi-condensed": "^5.2.7",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/rajdhani": "^5.2.7",
+    "@fontsource/saira-condensed": "^5.2.8",
+    "@tailwindcss/vite": "^4.3.1",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.18.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true
+  }
+}
