@@ -1,0 +1,7 @@
+{
+  "game": {
+    "base_url": "https://cdn.r5r.org/launcher/live_game",
+    "checksums": "https://cdn.r5r.org/launcher/live_game/checksums.json",
+    "dedicated_zip": "https://r5reloaded.com/server-download"
+  }
+}

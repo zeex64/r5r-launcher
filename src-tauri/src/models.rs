@@ -30,7 +30,6 @@ impl AppError {
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct LauncherConfig {
-    pub(crate) launcher: Option<LauncherBinary>,
     pub(crate) game: LauncherGameConfig,
 }
 
@@ -39,6 +38,18 @@ pub(crate) struct LauncherBinary {
     pub(crate) version: String,
     pub(crate) url: String,
     pub(crate) checksum: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct GitHubRelease {
+    pub(crate) tag_name: String,
+    pub(crate) assets: Vec<GitHubReleaseAsset>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct GitHubReleaseAsset {
+    pub(crate) name: String,
+    pub(crate) browser_download_url: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

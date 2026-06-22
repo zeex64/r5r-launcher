@@ -1,0 +1,95 @@
+name: Build Windows Draft Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the v prefix"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-draft-release:
+    runs-on: windows-latest
+
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version) || github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build launcher exe
+        run: npm run tauri build
+
+      - name: Locate build artifacts
+        id: artifacts
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path build/release -Filter *.exe | Select-Object -First 1
+          if (-not $exe) {
+            throw "Could not find a built .exe in build/release"
+          }
+
+          $checksum = Get-Item "$($exe.FullName).sha256.txt"
+          if (-not $checksum.Exists) {
+            throw "Could not find checksum file for $($exe.Name)"
+          }
+
+          "exe_path=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "exe_name=$($exe.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "checksum_path=$($checksum.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "checksum_name=$($checksum.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            ${{ steps.artifacts.outputs.exe_path }}
+            ${{ steps.artifacts.outputs.checksum_path }}
+
+      - name: Create or update draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ env.RELEASE_TAG }}"
+          $title = "R5Reloaded Launcher $tag"
+
+          gh release view $tag --repo ${{ github.repository }} *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              "${{ steps.artifacts.outputs.exe_path }}" `
+              "${{ steps.artifacts.outputs.checksum_path }}" `
+              --repo ${{ github.repository }} `
+              --target ${{ github.sha }} `
+              --title $title `
+              --draft `
+              --generate-notes
+          } else {
+            gh release upload $tag `
+              "${{ steps.artifacts.outputs.exe_path }}" `
+              "${{ steps.artifacts.outputs.checksum_path }}" `
+              --repo ${{ github.repository }} `
+              --clobber
+          }
