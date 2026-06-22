@@ -3,7 +3,7 @@ use std::time::Duration;
 use reqwest::Client;
 
 use crate::{
-    constants::{github_latest_release_api_url, CONFIG_URL},
+    constants::{github_latest_release_api_url, github_latest_manifest_url},
     models::{GitHubRelease, LauncherBinary, LauncherConfig, RemoteGame},
 };
 
@@ -30,7 +30,7 @@ pub(crate) async fn fetch_remote_game() -> Result<RemoteGame, String> {
 pub(crate) async fn fetch_launcher_config() -> Result<LauncherConfig, String> {
     let client = build_http_client()?;
     client
-        .get(CONFIG_URL)
+        .get(github_latest_manifest_url())
         .send()
         .await
         .map_err(|error| format!("Failed to fetch launcher config: {error}"))?
