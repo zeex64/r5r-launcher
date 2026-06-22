@@ -1,6 +1,6 @@
 [package]
 name = "r5r-launcher"
-version = "1.0.0"
+version = "0.1.0"
 description = "R5Reloaded Launcher"
 authors = ["R5Reloaded"]
 edition = "2021"

@@ -1,13 +1,16 @@
 {
   "name": "r5r-launcher",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "node scripts/tauri-with-checksum.mjs"
+    "tauri": "node scripts/tauri-with-checksum.mjs",
+    "version:patch": "node scripts/bumpVersion.cjs patch",
+    "version:minor": "node scripts/bumpVersion.cjs minor",
+    "version:major": "node scripts/bumpVersion.cjs major"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.2.8",

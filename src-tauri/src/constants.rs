@@ -6,7 +6,7 @@ pub const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 pub const MASTER_SERVER_HOSTNAME: &str = "r5r.org";
 pub const VERSION_FILE_NAME: &str = "r5r_version.txt";
-pub const CONFIG_URL: &str = "https://share.zeex64.com/raw/OjRmuK.json";
+pub const CONFIG_URL: &str = "https://raw.githubusercontent.com/zeex64/r5r-launcher/refs/heads/main/manifest.json";
 pub const GITHUB_OWNER: &str = "zeex64";
 pub const GITHUB_REPO: &str = "r5r-launcher";
 pub const GAME_EXE_NAME: &str = "r5apex.exe";
