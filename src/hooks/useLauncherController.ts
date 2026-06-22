@@ -310,13 +310,7 @@ export function useLauncherController() {
     (effectiveBusy
       ? gameProgress?.message
       : gameState?.buttonLabel === "PLAY"
-        ? launchPending && (isDedicatedMode || !gameRuntimeStatus.running)
-          ? "Launching game..."
-          : !isDedicatedMode && gameRuntimeStatus.running
-            ? gameRuntimeStatus.instanceCount > 1
-              ? `${gameRuntimeStatus.instanceCount} game windows running`
-              : "Game running"
-            : gameState?.statusText
+        ? gameState?.statusText
         : gameState?.statusText) ||
     "Checking game files";
   const progressText = gameProgress
