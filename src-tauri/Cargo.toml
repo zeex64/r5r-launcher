@@ -27,6 +27,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 sha2 = "0.10"
 shlex = "1"
 tokio = { version = "1", features = ["fs", "io-util", "rt-multi-thread", "time"] }
+windows-sys = { version = "0.61", features = ["Win32_Graphics_Gdi"] }
 
 [profile.release]
 opt-level = "z"

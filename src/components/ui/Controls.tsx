@@ -5,6 +5,7 @@ export {
   Stepper,
   TwoWay,
   Choice,
+  Select,
   StepSlider,
   RowText,
 } from "./controls/FormControls";

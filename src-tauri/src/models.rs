@@ -133,6 +133,14 @@ pub struct GameRuntimeStatus {
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct ResolutionOption {
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) label: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct LauncherUpdateState {
     pub(crate) local_version: String,
     pub(crate) remote_version: Option<String>,

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { ASSETS } from "../../../config/assets";
 import { playSettingsClick, playSettingsHover } from "../../../lib/uiSound";
 import { Img } from "../media/Img";
@@ -140,6 +141,107 @@ export function Choice<T extends string | number>({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+export function Select({
+  value,
+  options,
+  onChange,
+  placeholder = "Select an option",
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const selectedOption = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        onMouseEnter={playSettingsHover}
+        onMouseDown={playSettingsClick}
+        className={`relative h-9 w-full border border-white/20 bg-black/30 pl-3 pr-10 text-left font-cond text-[13px] uppercase tracking-[0.04em] text-ink outline-none transition-colors hover:border-white/20 hover:bg-white/10 ${
+          open ? "bg-white/10" : ""
+        }`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="block truncate">{selectedOption?.label ?? placeholder}</span>
+      </button>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex w-9 items-center justify-center border-l border-white/10 bg-black/20">
+        <Img
+          src={ASSETS.arrow}
+          alt=""
+          className={`h-[18px] w-[18px] object-contain opacity-70 transition-transform ${
+            open ? "rotate-180" : "rotate-0"
+          }`}
+        />
+      </div>
+
+      {open ? (
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 border border-white/14 bg-[#2f3137] p-1 shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+          <div className="max-h-64 overflow-y-auto">
+            {options.map((option) => {
+              const active = option.value === value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpen(false);
+                  }}
+                  onMouseEnter={playSettingsHover}
+                  onMouseDown={playSettingsClick}
+                  className={`relative flex h-9 w-full items-center px-3 text-left font-cond text-[13px] uppercase tracking-[0.04em] transition-colors ${
+                    active
+                      ? "bg-white/12 text-ink"
+                      : "text-ink/80 hover:bg-white/8 hover:text-ink"
+                  }`}
+                  role="option"
+                  aria-selected={active}
+                >
+                  <span className="block truncate">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

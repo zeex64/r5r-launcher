@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { ScreenShell } from "../ui/Controls";
 import {
   buildLaunchArgumentsPreview,
   DEFAULT_LAUNCH_SETTINGS,
+  hasSavedLaunchSettings,
   loadLaunchSettings,
   saveLaunchSettings,
   type LaunchSettings,
@@ -16,6 +18,7 @@ import {
   type LauncherSettings,
 } from "../../lib/launcherSettings";
 import { playSettingsClick, playSettingsHover } from "../../lib/uiSound";
+import type { ResolutionOption } from "../../types/app";
 import type { SettingsNavId } from "../layout/TopNav";
 import SettingsGamePage from "./gamePage";
 import SettingsLauncherPage from "./launcherPage";
@@ -38,8 +41,21 @@ export default function SettingsView({
   const [launcherSettings, setLauncherSettings] = useState<LauncherSettings>(() =>
     loadLauncherSettings(),
   );
+  const [resolutionOptions, setResolutionOptions] = useState<ResolutionOption[]>([]);
   const [launcherVersion, setLauncherVersion] = useState("Checking...");
   const preview = useMemo(() => buildLaunchArgumentsPreview(settings), [settings]);
+  const buildDefaultLaunchSettings = (options: ResolutionOption[]): LaunchSettings => {
+    const highestResolution = options[0];
+    if (!highestResolution) {
+      return { ...DEFAULT_LAUNCH_SETTINGS };
+    }
+
+    return {
+      ...DEFAULT_LAUNCH_SETTINGS,
+      resW: highestResolution.width.toString(),
+      resH: highestResolution.height.toString(),
+    };
+  };
 
   useEffect(() => {
     saveLaunchSettings(settings);
@@ -65,6 +81,27 @@ export default function SettingsView({
         LAUNCHER_SETTINGS_CHANGED_EVENT,
         handleLauncherSettingsChanged,
       );
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void invoke<ResolutionOption[]>("get_primary_monitor_resolutions")
+      .then((options) => {
+        if (!mounted) return;
+        setResolutionOptions(options);
+        if (!hasSavedLaunchSettings()) {
+          setSettings(buildDefaultLaunchSettings(options));
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setResolutionOptions([]);
+      });
+
+    return () => {
+      mounted = false;
     };
   }, []);
 
@@ -119,10 +156,13 @@ export default function SettingsView({
                 return;
               }
               if (isLauncherSection) {
-                setLauncherSettings({ ...DEFAULT_LAUNCHER_SETTINGS });
+                setLauncherSettings({
+                  ...DEFAULT_LAUNCHER_SETTINGS,
+                  hdTexturesEnabled: launcherSettings.hdTexturesEnabled,
+                });
                 return;
               }
-              setSettings({ ...DEFAULT_LAUNCH_SETTINGS });
+              setSettings(buildDefaultLaunchSettings(resolutionOptions));
             }}
             onMouseEnter={playSettingsHover}
             onMouseDown={playSettingsClick}
@@ -153,6 +193,7 @@ export default function SettingsView({
           settings={settings}
           setField={setField}
           preview={preview}
+          resolutionOptions={resolutionOptions}
         />
       )}
     </ScreenShell>

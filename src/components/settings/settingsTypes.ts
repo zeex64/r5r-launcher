@@ -1,6 +1,7 @@
 import type React from "react";
 import type { LaunchSettings } from "../../lib/launchSettings";
 import type { LauncherSettings } from "../../lib/launcherSettings";
+import type { ResolutionOption } from "../../types/app";
 
 export type SettingsFieldSetter = <K extends keyof LaunchSettings>(
   key: K,
@@ -11,6 +12,7 @@ export type GameSettingsPageProps = {
   settings: LaunchSettings;
   setField: SettingsFieldSetter;
   preview: string;
+  resolutionOptions: ResolutionOption[];
 };
 
 export type LauncherSettingsPageProps = {

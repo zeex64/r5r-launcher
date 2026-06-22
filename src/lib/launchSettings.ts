@@ -122,6 +122,14 @@ export function saveLaunchSettings(settings: LaunchSettings) {
   );
 }
 
+export function hasSavedLaunchSettings() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return Boolean(window.localStorage.getItem(STORAGE_KEY));
+}
+
 function isWholeNumber(value: string) {
   return /^-?\d+$/.test(value);
 }

@@ -1,10 +1,13 @@
 use std::{
+    collections::BTreeSet,
     os::windows::process::CommandExt,
     process::Command,
     sync::atomic::Ordering,
 };
 
 use tauri::{AppHandle, Emitter, Manager};
+#[cfg(windows)]
+use windows_sys::Win32::Graphics::Gdi::{DEVMODEW, EnumDisplaySettingsW};
 
 use crate::{
     launch_args::build_launch_args,
@@ -26,6 +29,7 @@ use crate::{
         AppError, DownloadJob, GameInstallState, GameRuntimeStatus, GameSyncFinished,
         GameSyncProgress, InstalledModsState, LaunchOptions, LauncherUpdateState,
         LegacyInstallInfo, ManifestFile, MasterServerStatus, OptionalContentSummary,
+        ResolutionOption,
     },
     paths::{
         get_install_dir, has_existing_game_files, manifest_path_to_fs, read_version_file,
@@ -334,6 +338,79 @@ pub async fn get_game_runtime_status() -> Result<GameRuntimeStatus, String> {
         running: instance_count > 0,
         instance_count,
     })
+}
+
+#[tauri::command]
+pub async fn get_primary_monitor_resolutions() -> Result<Vec<ResolutionOption>, String> {
+    #[cfg(windows)]
+    {
+        const ENUM_CURRENT_SETTINGS: u32 = 0xFFFF_FFFF;
+
+        let mut modes = BTreeSet::new();
+        let mut mode_index = 0_u32;
+
+        loop {
+            let mut dev_mode = DEVMODEW {
+                dmSize: std::mem::size_of::<DEVMODEW>() as u16,
+                ..unsafe { std::mem::zeroed() }
+            };
+
+            let ok = unsafe { EnumDisplaySettingsW(std::ptr::null(), mode_index, &mut dev_mode) };
+            if ok == 0 {
+                break;
+            }
+
+            let width = dev_mode.dmPelsWidth;
+            let height = dev_mode.dmPelsHeight;
+
+            if width >= 640 && height >= 480 {
+                modes.insert((width, height));
+            }
+
+            mode_index += 1;
+        }
+
+        if modes.is_empty() {
+            let mut current_mode = DEVMODEW {
+                dmSize: std::mem::size_of::<DEVMODEW>() as u16,
+                ..unsafe { std::mem::zeroed() }
+            };
+            let ok = unsafe {
+                EnumDisplaySettingsW(std::ptr::null(), ENUM_CURRENT_SETTINGS, &mut current_mode)
+            };
+
+            if ok != 0 {
+                let width = current_mode.dmPelsWidth;
+                let height = current_mode.dmPelsHeight;
+                if width > 0 && height > 0 {
+                    modes.insert((width, height));
+                }
+            }
+        }
+
+        let mut resolutions: Vec<ResolutionOption> = modes
+            .into_iter()
+            .map(|(width, height)| ResolutionOption {
+                width,
+                height,
+                label: format!("{width} x {height}"),
+            })
+            .collect();
+
+        resolutions.sort_by(|left, right| {
+            right
+                .width
+                .cmp(&left.width)
+                .then_with(|| right.height.cmp(&left.height))
+        });
+
+        Ok(resolutions)
+    }
+
+    #[cfg(not(windows))]
+    {
+        Ok(Vec::new())
+    }
 }
 
 #[tauri::command]

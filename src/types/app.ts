@@ -35,6 +35,12 @@ export type GameRuntimeStatus = {
   instanceCount: number;
 };
 
+export type ResolutionOption = {
+  width: number;
+  height: number;
+  label: string;
+};
+
 export type LauncherUpdateState = {
   localVersion: string;
   remoteVersion: string | null;

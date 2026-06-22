@@ -1,10 +1,11 @@
+import { useEffect, useState } from "react";
 import {
   Group,
   Row,
   FullRow,
   Stepper,
   TwoWay,
-  Choice,
+  Select,
   RowText,
 } from "../ui/Controls";
 import type { LaunchMode } from "../../lib/launchSettings";
@@ -28,8 +29,28 @@ export default function SettingsGamePage({
   settings,
   setField,
   preview,
+  resolutionOptions,
 }: GameSettingsPageProps) {
   const showServerCfg = settings.launchMode === "SERVER";
+  const matchedDetectedResolution = resolutionOptions.some(
+    (option) =>
+      option.width.toString() === settings.resW && option.height.toString() === settings.resH,
+  );
+  const [resolutionMode, setResolutionMode] = useState<"preset" | "custom">(
+    matchedDetectedResolution ? "preset" : "custom",
+  );
+
+  useEffect(() => {
+    if (!matchedDetectedResolution) {
+      setResolutionMode("custom");
+    }
+  }, [matchedDetectedResolution, settings.resW, settings.resH]);
+
+  const selectedResolutionValue =
+    resolutionMode === "custom" || !matchedDetectedResolution
+      ? "custom"
+      : `${settings.resW}x${settings.resH}`;
+  const showCustomResolutionFields = resolutionMode === "custom" || resolutionOptions.length === 0;
 
   return (
     <>
@@ -112,43 +133,59 @@ export default function SettingsGamePage({
             onChange={(value) => setField("borderless", value)}
           />
         </Row>
-        <Row label="Width">
-          <RowText
-            value={settings.resW}
-            onChange={(value) => setField("resW", value)}
-            placeholder="1920"
-            type="number"
+        <Row
+          label="Resolution"
+          hint="Change the game's resolution"
+        >
+          <Select
+            value={selectedResolutionValue}
+            options={[
+              ...resolutionOptions.map((option) => ({
+                value: `${option.width}x${option.height}`,
+                label: option.label,
+              })),
+              { value: "custom", label: "Custom" },
+            ]}
+            placeholder="Select a resolution"
+            onChange={(value) => {
+              if (value === "custom") {
+                setResolutionMode("custom");
+                return;
+              }
+              if (!value) return;
+              const [w, h] = value.split("x");
+              setResolutionMode("preset");
+              setField("resW", w);
+              setField("resH", h);
+            }}
           />
         </Row>
-        <Row label="Height">
-          <RowText
-            value={settings.resH}
-            onChange={(value) => setField("resH", value)}
-            placeholder="1080"
-            type="number"
-          />
-        </Row>
+        {showCustomResolutionFields ? (
+          <>
+            <Row label="Width">
+              <RowText
+                value={settings.resW}
+                onChange={(value) => setField("resW", value)}
+                placeholder="1920"
+                type="number"
+              />
+            </Row>
+            <Row label="Height">
+              <RowText
+                value={settings.resH}
+                onChange={(value) => setField("resH", value)}
+                placeholder="1080"
+                type="number"
+              />
+            </Row>
+          </>
+        ) : null}
         <Row label="Max FPS" hint="0 = unlimited">
           <RowText
             value={settings.maxFps}
             onChange={(value) => setField("maxFps", value)}
             placeholder="0"
             type="number"
-          />
-        </Row>
-        <Row label="Resolution">
-          <Choice
-            value={`${settings.resW}x${settings.resH}`}
-            options={[
-              { value: "1920x1080", label: "1080p" },
-              { value: "2560x1440", label: "1440p" },
-              { value: "3840x2160", label: "4K" },
-            ]}
-            onChange={(value) => {
-              const [w, h] = value.split("x");
-              setField("resW", w);
-              setField("resH", h);
-            }}
           />
         </Row>
         <Row label="Skip Intro Video" hint="Faster startup (-novid)">
