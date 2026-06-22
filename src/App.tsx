@@ -70,6 +70,10 @@ export default function App() {
     blockingInstallDirError,
   } = useLauncherController();
 
+  const launcherUpdateVersionLabel = launcherUpdateState?.remoteVersion
+    ? ` ${launcherUpdateState.remoteVersion}`
+    : "";
+
   useEffect(() => {
     if (active !== "settings") {
       return;
@@ -218,8 +222,8 @@ export default function App() {
           title="Launcher Update"
           message={
             launcherUpdateBusy
-              ? `Downloading launcher update${launcherUpdateState?.remoteVersion ? ` v${launcherUpdateState.remoteVersion}` : ""}...`
-              : `A new launcher update${launcherUpdateState?.remoteVersion ? ` (v${launcherUpdateState.remoteVersion})` : ""} is available. Do you want to update now?`
+              ? `Downloading launcher update${launcherUpdateVersionLabel}...`
+              : `A new launcher update${launcherUpdateState?.remoteVersion ? ` (${launcherUpdateState.remoteVersion})` : ""} is available. Do you want to update now?`
           }
           confirmLabel={launcherUpdateBusy ? "Updating" : "Update"}
           confirmDisabled={launcherUpdateBusy}
