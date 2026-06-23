@@ -32,6 +32,22 @@ export default function SettingsGamePage({
   preview,
   resolutionOptions,
 }: GameSettingsPageProps) {
+  const normalizeMaxFps = (value: number) => {
+    if (value <= 0) {
+      return 0;
+    }
+
+    if (value < 30) {
+      return 30;
+    }
+
+    return Math.min(300, value);
+  };
+  const sliderValueToMaxFps = (value: number) => (value <= 29 ? 0 : normalizeMaxFps(value));
+  const maxFpsToSliderValue = (value: number) => {
+    const normalized = normalizeMaxFps(value);
+    return normalized === 0 ? 29 : normalized;
+  };
   const showServerCfg = settings.launchMode === "SERVER";
   const matchedDetectedResolution = resolutionOptions.some(
     (option) =>
@@ -54,7 +70,10 @@ export default function SettingsGamePage({
       ? "custom"
       : `${settings.resW}x${settings.resH}`;
   const showCustomResolutionFields = resolutionMode === "custom" || resolutionOptions.length === 0;
-  const maxFpsValue = Math.min(300, Math.max(0, Number.parseInt(settings.maxFps || "0", 10) || 0));
+  const maxFpsValue = normalizeMaxFps(
+    Number.parseInt(settings.maxFps || "0", 10) || 0,
+  );
+  const maxFpsSliderValue = maxFpsToSliderValue(maxFpsValue);
 
   return (
     <>
@@ -174,10 +193,10 @@ export default function SettingsGamePage({
         ) : null}
         <Row label="Max FPS">
           <StepSlider
-            value={maxFpsValue}
-            min={0}
+            value={maxFpsSliderValue}
+            min={29}
             max={300}
-            onChange={(value) => setField("maxFps", value.toString())}
+            onChange={(value) => setField("maxFps", sliderValueToMaxFps(value).toString())}
             display={maxFpsValue === 0 ? "Unlimited" : maxFpsValue.toString()}
           />
         </Row>
