@@ -85,7 +85,6 @@ export default function ServersView({
 }) {
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState<ServerRegionFilter>("All");
-  const [onlyWithPlayers, setOnlyWithPlayers] = useState(false);
   const [hideEmptyServers, setHideEmptyServers] = useState(false);
   const [hideFullServers, setHideFullServers] = useState(false);
   const [mapFilter, setMapFilter] = useState("All");
@@ -116,7 +115,7 @@ export default function ServersView({
           const maxPlayers = server.maxPlayers || 0;
 
           if (region !== "All" && regionGroup(server.region) !== region) return false;
-          if ((onlyWithPlayers || hideEmptyServers) && players <= 0) return false;
+          if (hideEmptyServers && players <= 0) return false;
           if (hideFullServers && maxPlayers > 0 && players >= maxPlayers) return false;
           if (mapFilter !== "All" && server.map !== mapFilter) {
             return false;
@@ -145,7 +144,6 @@ export default function ServersView({
       hideFullServers,
       mapFilter,
       normalizedQuery,
-      onlyWithPlayers,
       playlistFilter,
       region,
       servers,
@@ -243,17 +241,6 @@ export default function ServersView({
                   { value: "Asia", label: "Asia" },
                 ]}
                 onChange={setRegion}
-              />
-            </div>
-            <div className="grid min-w-[180px] grid-cols-1 gap-1">
-              <div className="font-cond text-[10px] uppercase tracking-[0.08em] text-ink/60">
-                Only servers with players
-              </div>
-              <TwoWay
-                checked={onlyWithPlayers}
-                onChange={setOnlyWithPlayers}
-                offLabel="Off"
-                onLabel="On"
               />
             </div>
             <div className="grid min-w-[150px] grid-cols-1 gap-1">

@@ -334,9 +334,17 @@ export function useLauncherController() {
     !effectiveBusy &&
     !launchPending &&
     !optionalContentBusy;
-  const showLauncherUpdateOverlay =
-    Boolean(launcherUpdateState?.updateAvailable) || launcherUpdateBusy;
   const showLegacyInstallOverlay = Boolean(legacyInstallInfo) || legacyMigrationBusy;
+  const canPromptLauncherUpdate =
+    !launcherUpdateBusy &&
+    !effectiveBusy &&
+    !launchPending &&
+    !showLegacyInstallOverlay &&
+    !optionalContentPrompt &&
+    !optionalContentBusy &&
+    !gameActionError;
+  const showLauncherUpdateOverlay =
+    launcherUpdateBusy || (Boolean(launcherUpdateState?.updateAvailable) && canPromptLauncherUpdate);
   const saveLauncherSettingsState = (settings: LauncherSettings) => {
     saveLauncherSettings(settings);
     setCurrentLauncherSettings(settings);

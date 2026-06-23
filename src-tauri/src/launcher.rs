@@ -191,7 +191,7 @@ pub async fn get_game_install_state(
                     remote_version: Some(remote.manifest.game_version.clone()),
                     button_label: "UPDATE".into(),
                     status_text: format!(
-                        "Installed v{}  •  Update v{} available",
+                        "Installed v{} - Update v{} available",
                         installed_version.unwrap_or_else(|| "Unknown".into()),
                         remote.manifest.game_version
                     ),
@@ -762,3 +762,4 @@ fn version_segments(version: &str) -> Vec<u64> {
         .map(|segment| segment.parse::<u64>().unwrap_or(0))
         .collect()
 }
+
