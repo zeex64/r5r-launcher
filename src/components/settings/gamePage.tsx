@@ -42,10 +42,12 @@ export default function SettingsGamePage({
   );
 
   useEffect(() => {
-    if (!matchedDetectedResolution) {
-      setResolutionMode("custom");
+    if (resolutionOptions.length === 0) {
+      return;
     }
-  }, [matchedDetectedResolution, settings.resW, settings.resH]);
+
+    setResolutionMode(matchedDetectedResolution ? "preset" : "custom");
+  }, [matchedDetectedResolution, resolutionOptions.length]);
 
   const selectedResolutionValue =
     resolutionMode === "custom" || !matchedDetectedResolution
