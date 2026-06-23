@@ -6,6 +6,7 @@ import {
   Stepper,
   TwoWay,
   Select,
+  StepSlider,
   RowText,
 } from "../ui/Controls";
 import type { LaunchMode } from "../../lib/launchSettings";
@@ -51,6 +52,7 @@ export default function SettingsGamePage({
       ? "custom"
       : `${settings.resW}x${settings.resH}`;
   const showCustomResolutionFields = resolutionMode === "custom" || resolutionOptions.length === 0;
+  const maxFpsValue = Math.min(300, Math.max(0, Number.parseInt(settings.maxFps || "0", 10) || 0));
 
   return (
     <>
@@ -124,19 +126,7 @@ export default function SettingsGamePage({
       </Group>
 
       <Group title="Graphics">
-        <Row label="Windowed Mode" hint="Run in a resizable window">
-          <TwoWay checked={settings.windowed} onChange={(value) => setField("windowed", value)} />
-        </Row>
-        <Row label="Borderless" hint="Remove window decorations">
-          <TwoWay
-            checked={settings.borderless}
-            onChange={(value) => setField("borderless", value)}
-          />
-        </Row>
-        <Row
-          label="Resolution"
-          hint="Change the game's resolution"
-        >
+        <Row label="Resolution">
           <Select
             value={selectedResolutionValue}
             options={[
@@ -180,18 +170,89 @@ export default function SettingsGamePage({
             </Row>
           </>
         ) : null}
-        <Row label="Max FPS" hint="0 = unlimited">
-          <RowText
-            value={settings.maxFps}
-            onChange={(value) => setField("maxFps", value)}
-            placeholder="0"
-            type="number"
+        <Row label="Max FPS">
+          <StepSlider
+            value={maxFpsValue}
+            min={0}
+            max={300}
+            onChange={(value) => setField("maxFps", value.toString())}
+            display={maxFpsValue === 0 ? "Unlimited" : maxFpsValue.toString()}
           />
         </Row>
-        <Row label="Skip Intro Video" hint="Faster startup (-novid)">
-          <TwoWay checked={settings.noVid} onChange={(value) => setField("noVid", value)} />
+        <Row label="Windowed Mode">
+          <TwoWay checked={settings.windowed} onChange={(value) => setField("windowed", value)} />
         </Row>
-        <Row label="FPS Counter">
+        <Row label="Borderless">
+          <TwoWay
+            checked={settings.borderless}
+            onChange={(value) => setField("borderless", value)}
+          />
+        </Row>
+      </Group>
+
+      <Group title="Network">
+        <Row label="Matchmaking Hostname">
+          <RowText
+            value={settings.matchmakingHostname}
+            onChange={(value) => setField("matchmakingHostname", value)}
+            placeholder="r5r.org"
+          />
+        </Row>
+        <Row label="Encrypt Packets" hint="Secure network communication">
+          <TwoWay
+            checked={settings.encryptPackets}
+            onChange={(value) => setField("encryptPackets", value)}
+          />
+        </Row>
+        <Row label="Random Network Key" hint="Generate unique connection key">
+          <TwoWay
+            checked={settings.randomNetkey}
+            onChange={(value) => setField("randomNetkey", value)}
+          />
+        </Row>
+        <Row label="Queued Packets" hint="Buffer network data">
+          <TwoWay
+            checked={settings.queuedPackets}
+            onChange={(value) => setField("queuedPackets", value)}
+          />
+        </Row>
+        <Row label="Disable Timeouts" hint="Prevent connection drops">
+          <TwoWay checked={settings.noTimeout} onChange={(value) => setField("noTimeout", value)} />
+        </Row>
+      </Group>
+
+      <Group title="Debug">
+        <Row label="Offline Mode" hint="Launches without connecting to the masterserver. Play solo or on local network.">
+          <TwoWay checked={settings.offlineMode} onChange={(value) => setField("offlineMode", value)} />
+        </Row>
+        <Row label="Developer" hint="Enables developer mode and console commands for debugging and testing.">
+          <TwoWay
+            checked={settings.enableDeveloper}
+            onChange={(value) => setField("enableDeveloper", value)}
+          />
+        </Row>
+        <Row label="Cheats" hint="Enable cheat commands">
+          <TwoWay checked={settings.enableCheats} onChange={(value) => setField("enableCheats", value)} />
+        </Row>
+        <Row label="Show Console" hint="Shows the console window">
+          <TwoWay
+            checked={settings.showConsole}
+            onChange={(value) => setField("showConsole", value)}
+          />
+        </Row>
+        <Row label="Console Overlay" hint="Shows DevMsg RUI console overlay">
+          <TwoWay
+            checked={settings.drawNotify}
+            onChange={(value) => setField("drawNotify", value)}
+          />
+        </Row>
+        <Row label="Matchmaking Debug" hint="Print masterserver debug info to console">
+          <TwoWay
+            checked={settings.showDebugInfo}
+            onChange={(value) => setField("showDebugInfo", value)}
+          />
+        </Row>
+        <Row label="FPS Counter" hint="Shows fps overlay in-game">
           <Stepper
             value={settings.showFps}
             onChange={(value) => setField("showFps", value)}
@@ -202,9 +263,18 @@ export default function SettingsGamePage({
             ]}
           />
         </Row>
+        <Row label="Show Position" hint="Display coordinates in-game">
+          <TwoWay checked={settings.showPos} onChange={(value) => setField("showPos", value)} />
+        </Row>
       </Group>
 
-      <Group title="Performance">
+      <Group title="Advanced">
+        <Row label="Skip Intro Video" hint="Faster startup (-novid)">
+          <TwoWay checked={settings.noVid} onChange={(value) => setField("noVid", value)} />
+        </Row>
+        <Row label="Disable Async Systems" hint="Force synchronous loading - may help with crashes on older CPUs">
+          <TwoWay checked={settings.noAsync} onChange={(value) => setField("noAsync", value)} />
+        </Row>
         <Row label="Reserved Cores" hint="-1 = auto">
           <RowText
             value={settings.reservedCores}
@@ -221,68 +291,10 @@ export default function SettingsGamePage({
             type="number"
           />
         </Row>
-        <Row label="Disable Async Systems" hint="May help crashes on older CPUs">
-          <TwoWay checked={settings.noAsync} onChange={(value) => setField("noAsync", value)} />
-        </Row>
-      </Group>
-
-      <Group title="Network">
-        <Row label="Encrypt Packets" hint="Secure network communication">
-          <TwoWay
-            checked={settings.encryptPackets}
-            onChange={(value) => setField("encryptPackets", value)}
-          />
-        </Row>
-        <Row label="Random Network Key" hint="Unique key per session">
-          <TwoWay
-            checked={settings.randomNetkey}
-            onChange={(value) => setField("randomNetkey", value)}
-          />
-        </Row>
-        <Row label="Queued Packets" hint="Buffer network data">
-          <TwoWay
-            checked={settings.queuedPackets}
-            onChange={(value) => setField("queuedPackets", value)}
-          />
-        </Row>
-        <Row label="Disable Timeouts" hint="Prevent connection drops">
-          <TwoWay checked={settings.noTimeout} onChange={(value) => setField("noTimeout", value)} />
-        </Row>
-        <Row label="Matchmaking Debug" hint="Server browser debug overlay">
-          <TwoWay
-            checked={settings.showDebugInfo}
-            onChange={(value) => setField("showDebugInfo", value)}
-          />
-        </Row>
-        <Row label="Matchmaking Hostname">
-          <RowText
-            value={settings.matchmakingHostname}
-            onChange={(value) => setField("matchmakingHostname", value)}
-            placeholder="r5r.org"
-          />
-        </Row>
-      </Group>
-
-      <Group title="Console & Playlist">
-        <Row label="Show Console" hint="Debug console window">
-          <TwoWay
-            checked={settings.showConsole}
-            onChange={(value) => setField("showConsole", value)}
-          />
-        </Row>
         <Row label="ANSI Colors" hint="Colored console output">
           <TwoWay
             checked={settings.colorConsole}
             onChange={(value) => setField("colorConsole", value)}
-          />
-        </Row>
-        <Row label="Show Position" hint="Display coordinates in-game">
-          <TwoWay checked={settings.showPos} onChange={(value) => setField("showPos", value)} />
-        </Row>
-        <Row label="Console Overlay" hint="Show DevMsg output">
-          <TwoWay
-            checked={settings.drawNotify}
-            onChange={(value) => setField("drawNotify", value)}
           />
         </Row>
         <Row label="Playlist File">
@@ -292,39 +304,21 @@ export default function SettingsGamePage({
             placeholder="playlists_r5_patch.txt"
           />
         </Row>
-      </Group>
-
-      <Group title="Advanced">
-        <Row label="Developer" hint="Enable dev console & commands">
-          <TwoWay
-            checked={settings.enableDeveloper}
-            onChange={(value) => setField("enableDeveloper", value)}
-          />
-        </Row>
-        <Row label="Cheats" hint="Allow sv_cheats - private testing only">
-          <TwoWay checked={settings.enableCheats} onChange={(value) => setField("enableCheats", value)} />
-        </Row>
-        <Row label="Offline Mode" hint="Launch without the masterserver">
-          <TwoWay checked={settings.offlineMode} onChange={(value) => setField("offlineMode", value)} />
-        </Row>
         <FullRow>
-          <span className="mb-1 w-full font-cond text-[11px] uppercase tracking-wider text-ink-mute">
+          <span className="mb-1 w-full font-cond text-[11px] uppercase tracking-wider text-ink">
             Custom Command Line
           </span>
           <RowText
             value={settings.customCmd}
             onChange={(value) => setField("customCmd", value)}
-            placeholder="+map mp_lobby"
+            placeholder="Add custom launch arguments (e.g., +map mp_lobby). Separate with spaces."
             mono
           />
         </FullRow>
       </Group>
 
-      <Group title="Launch Command">
+      <Group title="Final Launch Command">
         <FullRow>
-          <span className="mb-1 w-full font-cond text-[11px] uppercase tracking-wider text-ink-mute">
-            Preview
-          </span>
           <div className="w-full border border-white/10 bg-black/30 px-3 py-2 font-mono text-[12px] text-ink/80">
             {preview || "No launch arguments"}
           </div>

@@ -262,19 +262,22 @@ export function StepSlider({
   display?: string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
-  const markerLeft = `calc(${pct}% - 2px)`;
+  const markerLeft = `calc(${pct}% - 8px)`;
   return (
-    <div className="flex items-center gap-3">
-      <div className="hud-range-shell relative flex-1">
-        <div className="pointer-events-none absolute inset-[0px] overflow-hidden border border-white/6 bg-[#2e3035]">
+    <div className="flex items-center">
+      <div className="hud-range-shell relative flex-1 overflow-hidden">
+        <div className="pointer-events-none absolute inset-[0px] overflow-hidden">
           <span
-            className="absolute inset-y-0 left-0 bg-[#b9b9b9]"
+            className="absolute inset-y-0 left-0 bg-white/70"
             style={{ width: `${pct}%` }}
           />
           <span
-            className="absolute inset-y-0 w-[4px] bg-[#ff5a2f]"
+            className="absolute inset-y-0 w-[16px] bg-[#ff5a2f]"
             style={{ left: markerLeft }}
           />
+          <span className="absolute inset-y-[3px] left-3 flex items-center bg-black/60 px-2 font-mono text-[12px] text-white/88">
+            {display ?? value}
+          </span>
         </div>
         <input
           type="range"
@@ -288,9 +291,6 @@ export function StepSlider({
           className="hud-range"
         />
       </div>
-      <span className="grid h-8 w-16 shrink-0 place-items-center border border-white/0 bg-black/0 font-mono text-[14px] text-ink/70">
-        {display ?? value}
-      </span>
     </div>
   );
 }
