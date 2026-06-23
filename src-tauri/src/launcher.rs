@@ -1,5 +1,5 @@
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeSet, VecDeque},
     os::windows::process::CommandExt,
     process::Command,
     sync::atomic::Ordering,
@@ -42,6 +42,8 @@ use crate::{
 };
 
 pub use crate::models::GameSyncLock;
+
+const MAX_DEFERRED_DOWNLOAD_ATTEMPTS: u32 = 9;
 
 #[tauri::command]
 pub async fn get_legacy_install_state(app: AppHandle) -> Result<Option<LegacyInstallInfo>, String> {
@@ -316,8 +318,21 @@ pub async fn get_master_server_status() -> Result<MasterServerStatus, String> {
 
 #[tauri::command]
 pub async fn get_game_runtime_status() -> Result<GameRuntimeStatus, String> {
-    let output = Command::new("tasklist")
-        .args(["/FI", &format!("IMAGENAME eq {GAME_EXE_NAME}"), "/FO", "CSV", "/NH"])
+    let install_dir = get_install_dir()?;
+    let target_exe = install_dir.join(GAME_EXE_NAME);
+    let target_exe = target_exe
+        .canonicalize()
+        .unwrap_or(target_exe);
+    let command = format!(
+        "$target = [System.IO.Path]::GetFullPath({target}); \
+$count = @(Get-CimInstance Win32_Process -Filter \"Name='{game_exe}'\" | Where-Object {{ $_.ExecutablePath -and [System.IO.Path]::GetFullPath($_.ExecutablePath).Equals($target, [System.StringComparison]::OrdinalIgnoreCase) }}).Count; \
+Write-Output $count",
+        target = powershell_quote(&target_exe.display().to_string()),
+        game_exe = GAME_EXE_NAME,
+    );
+
+    let output = Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &command])
         .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|error| format!("Failed to query running game processes: {error}"))?;
@@ -328,11 +343,9 @@ pub async fn get_game_runtime_status() -> Result<GameRuntimeStatus, String> {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let instance_count = stdout
-        .lines()
-        .map(str::trim)
-        .filter(|line| !line.is_empty())
-        .filter(|line| !line.starts_with("INFO:"))
-        .count();
+        .trim()
+        .parse::<usize>()
+        .map_err(|error| format!("Failed to parse running game process count: {error}"))?;
 
     Ok(GameRuntimeStatus {
         running: instance_count > 0,
@@ -398,9 +411,12 @@ pub async fn get_primary_monitor_resolutions() -> Result<Vec<ResolutionOption>, 
             .collect();
 
         resolutions.sort_by(|left, right| {
-            right
-                .width
-                .cmp(&left.width)
+            let left_pixels = u64::from(left.width) * u64::from(left.height);
+            let right_pixels = u64::from(right.width) * u64::from(right.height);
+
+            right_pixels
+                .cmp(&left_pixels)
+                .then_with(|| right.width.cmp(&left.width))
                 .then_with(|| right.height.cmp(&left.height))
         });
 
@@ -515,6 +531,7 @@ async fn run_game_sync(app: &AppHandle, include_optional: bool) -> Result<String
         if !file_matches(&install_dir, file).await? {
             jobs.push(DownloadJob {
                 file: (*file).clone(),
+                attempts: 0,
             });
         }
     }
@@ -554,37 +571,17 @@ async fn run_game_sync(app: &AppHandle, include_optional: bool) -> Result<String
     }
 
     let client = build_http_client()?;
-    let mut downloaded_bytes = 0_u64;
-
-    for (index, job) in jobs.iter().enumerate() {
-        if job.file.parts.is_empty() {
-            downloaded_bytes = download_single_file(
-                app,
-                &client,
-                &remote.base_url,
-                &install_dir,
-                &job.file,
-                downloaded_bytes,
-                total_bytes,
-                index,
-                jobs.len(),
-            )
-            .await?;
-        } else {
-            downloaded_bytes = download_multipart_file(
-                app,
-                &client,
-                &remote.base_url,
-                &install_dir,
-                &job.file,
-                downloaded_bytes,
-                total_bytes,
-                index,
-                jobs.len(),
-            )
-            .await?;
-        }
-    }
+    let jobs_len = jobs.len();
+    run_download_queue(
+        app,
+        &client,
+        &remote.base_url,
+        &install_dir,
+        jobs,
+        total_bytes,
+        jobs_len,
+    )
+    .await?;
 
     write_version_file(
         &install_dir.join(VERSION_FILE_NAME),
@@ -600,8 +597,8 @@ async fn run_game_sync(app: &AppHandle, include_optional: bool) -> Result<String
             message: format!("Installed game version {}", remote.manifest.game_version),
             downloaded_bytes: total_bytes,
             total_bytes,
-            files_done: jobs.len(),
-            files_total: jobs.len(),
+            files_done: jobs_len,
+            files_total: jobs_len,
         },
     );
 
@@ -653,6 +650,7 @@ async fn run_optional_content_sync(app: &AppHandle) -> Result<String, String> {
         if !file_matches(&install_dir, file).await? {
             jobs.push(DownloadJob {
                 file: (*file).clone(),
+                attempts: 0,
             });
         }
     }
@@ -686,37 +684,17 @@ async fn run_optional_content_sync(app: &AppHandle) -> Result<String, String> {
     }
 
     let client = build_http_client()?;
-    let mut downloaded_bytes = 0_u64;
-
-    for (index, job) in jobs.iter().enumerate() {
-        if job.file.parts.is_empty() {
-            downloaded_bytes = download_single_file(
-                app,
-                &client,
-                &remote.base_url,
-                &install_dir,
-                &job.file,
-                downloaded_bytes,
-                total_bytes,
-                index,
-                jobs.len(),
-            )
-            .await?;
-        } else {
-            downloaded_bytes = download_multipart_file(
-                app,
-                &client,
-                &remote.base_url,
-                &install_dir,
-                &job.file,
-                downloaded_bytes,
-                total_bytes,
-                index,
-                jobs.len(),
-            )
-            .await?;
-        }
-    }
+    let jobs_len = jobs.len();
+    run_download_queue(
+        app,
+        &client,
+        &remote.base_url,
+        &install_dir,
+        jobs,
+        total_bytes,
+        jobs_len,
+    )
+    .await?;
 
     emit_progress(
         app,
@@ -726,8 +704,8 @@ async fn run_optional_content_sync(app: &AppHandle) -> Result<String, String> {
             message: "Installed HD textures".into(),
             downloaded_bytes: total_bytes,
             total_bytes,
-            files_done: jobs.len(),
-            files_total: jobs.len(),
+            files_done: jobs_len,
+            files_total: jobs_len,
         },
     );
 
@@ -736,6 +714,92 @@ async fn run_optional_content_sync(app: &AppHandle) -> Result<String, String> {
 
 fn emit_progress(app: &AppHandle, progress: GameSyncProgress) {
     let _ = app.emit(DOWNLOAD_EVENT, progress);
+}
+
+async fn run_download_queue(
+    app: &AppHandle,
+    client: &reqwest::Client,
+    base_url: &str,
+    install_dir: &std::path::Path,
+    jobs: Vec<DownloadJob>,
+    total_bytes: u64,
+    files_total: usize,
+) -> Result<(), String> {
+    let mut queue: VecDeque<DownloadJob> = jobs.into();
+    let mut completed = 0_usize;
+    let mut downloaded_bytes = 0_u64;
+    let mut failures = Vec::new();
+
+    while let Some(mut job) = queue.pop_front() {
+        let result = if job.file.parts.is_empty() {
+            download_single_file(
+                app,
+                client,
+                base_url,
+                install_dir,
+                &job.file,
+                downloaded_bytes,
+                total_bytes,
+                completed,
+                files_total,
+            )
+            .await
+        } else {
+            download_multipart_file(
+                app,
+                client,
+                base_url,
+                install_dir,
+                &job.file,
+                downloaded_bytes,
+                total_bytes,
+                completed,
+                files_total,
+            )
+            .await
+        };
+
+        match result {
+            Ok(next_downloaded_bytes) => {
+                downloaded_bytes = next_downloaded_bytes;
+                completed += 1;
+            }
+            Err(error) => {
+                job.attempts += 1;
+                if job.attempts < MAX_DEFERRED_DOWNLOAD_ATTEMPTS {
+                    emit_progress(
+                        app,
+                        GameSyncProgress {
+                            stage: "retrying".into(),
+                            current_file: Some(job.file.path.clone()),
+                            message: format!(
+                                "Retrying {} later ({}/{})",
+                                job.file.path, job.attempts, MAX_DEFERRED_DOWNLOAD_ATTEMPTS
+                            ),
+                            downloaded_bytes,
+                            total_bytes,
+                            files_done: completed,
+                            files_total,
+                        },
+                    );
+                    queue.push_back(job);
+                } else {
+                    failures.push(format!("{} ({error})", job.file.path));
+                }
+            }
+        }
+    }
+
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        let summary = failures.join("; ");
+        Err(format!(
+            "Failed to download {} file(s) after multiple attempts: {}",
+            failures.len(),
+            summary
+        ))
+    }
 }
 
 pub(crate) fn is_remote_version_newer(remote: &str, local: &str) -> bool {
@@ -761,5 +825,9 @@ fn version_segments(version: &str) -> Vec<u64> {
         .split('.')
         .map(|segment| segment.parse::<u64>().unwrap_or(0))
         .collect()
+}
+
+fn powershell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "''"))
 }
 

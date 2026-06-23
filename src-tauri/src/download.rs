@@ -20,6 +20,8 @@ use crate::{
     },
 };
 
+const MAX_IMMEDIATE_DOWNLOAD_RETRIES: u32 = 3;
+
 pub(crate) async fn file_matches(root: &Path, file: &ManifestFile) -> Result<bool, String> {
     let path = manifest_path_to_fs(root, &file.path);
     if !path.exists() {
@@ -258,6 +260,11 @@ async fn download_with_retries(
         {
             Ok(()) => return Ok(()),
             Err(error) => {
+                if attempt >= MAX_IMMEDIATE_DOWNLOAD_RETRIES {
+                    let _ = fs::remove_file(temp_download_path(target_path)).await;
+                    return Err(error);
+                }
+
                 emit_progress(
                     app,
                     GameSyncProgress {
@@ -275,10 +282,6 @@ async fn download_with_retries(
                 let delay_secs = u64::from(attempt.min(10));
                 tokio::time::sleep(Duration::from_secs(delay_secs)).await;
                 let _ = fs::remove_file(temp_download_path(target_path)).await;
-
-                if attempt == u32::MAX {
-                    return Err(error);
-                }
             }
         }
     }

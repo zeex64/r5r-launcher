@@ -199,6 +199,7 @@ pub(crate) struct RemoteGame {
 #[derive(Debug, Clone)]
 pub(crate) struct DownloadJob {
     pub(crate) file: ManifestFile,
+    pub(crate) attempts: u32,
 }
 
 #[derive(Debug, Deserialize)]
