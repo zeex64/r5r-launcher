@@ -275,9 +275,11 @@ export function StepSlider({
             className="absolute inset-y-0 w-[16px] bg-[#ff5a2f]"
             style={{ left: markerLeft }}
           />
-          <span className="absolute inset-y-[3px] left-3 flex items-center bg-black/60 px-2 font-mono text-[12px] text-white/88">
-            {display ?? value}
-          </span>
+          {display ? (
+            <span className="absolute inset-y-[3px] left-3 flex items-center bg-black/60 px-2 font-mono text-[12px] text-white/88">
+              {display}
+            </span>
+          ) : null}
         </div>
         <input
           type="range"

@@ -11,6 +11,7 @@ import {
 } from "../ui/Controls";
 import type { LaunchMode } from "../../lib/launchSettings";
 import type { GameSettingsPageProps } from "./settingsTypes";
+import { playSettingsClick, playSettingsHover } from "../../lib/uiSound";
 
 const MODE_OPTS: { value: LaunchMode; label: string }[] = [
   { value: "CLIENT", label: "Join Only" },
@@ -74,6 +75,21 @@ export default function SettingsGamePage({
     Number.parseInt(settings.maxFps || "0", 10) || 0,
   );
   const maxFpsSliderValue = maxFpsToSliderValue(maxFpsValue);
+  const handleMaxFpsInputChange = (value: string) => {
+    if (value === "") {
+      setField("maxFps", "");
+      return;
+    }
+
+    if (!/^\d+$/.test(value)) {
+      return;
+    }
+
+    setField("maxFps", value);
+  };
+  const handleMaxFpsInputBlur = () => {
+    setField("maxFps", normalizeMaxFps(Number.parseInt(settings.maxFps || "0", 10) || 0).toString());
+  };
 
   return (
     <>
@@ -192,13 +208,29 @@ export default function SettingsGamePage({
           </>
         ) : null}
         <Row label="Max FPS">
-          <StepSlider
-            value={maxFpsSliderValue}
-            min={29}
-            max={300}
-            onChange={(value) => setField("maxFps", sliderValueToMaxFps(value).toString())}
-            display={maxFpsValue === 0 ? "Unlimited" : maxFpsValue.toString()}
-          />
+          <div className="flex w-full items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <StepSlider
+                value={maxFpsSliderValue}
+                min={29}
+                max={300}
+                onChange={(value) => setField("maxFps", sliderValueToMaxFps(value).toString())}
+              />
+            </div>
+            <input
+              type="number"
+              min={0}
+              max={300}
+              step={1}
+              value={settings.maxFps}
+              placeholder="0"
+              onChange={(event) => handleMaxFpsInputChange(event.target.value)}
+              onBlur={handleMaxFpsInputBlur}
+              onMouseEnter={playSettingsHover}
+              onMouseDown={playSettingsClick}
+              className="h-9 w-[84px] border border-white/10 bg-black/30 px-3 text-right font-mono text-[12px] text-ink outline-none transition-colors focus:border-red placeholder:text-ink-mute"
+            />
+          </div>
         </Row>
         <Row label="Windowed Mode">
           <TwoWay checked={settings.windowed} onChange={(value) => setField("windowed", value)} />
