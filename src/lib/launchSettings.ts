@@ -14,6 +14,7 @@ export type LaunchSettings = {
   resW: string;
   resH: string;
   maxFps: string;
+  backtraceEnabled: boolean;
   noVid: boolean;
   showFps: string;
   reservedCores: string;
@@ -49,7 +50,8 @@ export const DEFAULT_LAUNCH_SETTINGS: LaunchSettings = {
   borderless: false,
   resW: "1920",
   resH: "1080",
-  maxFps: "0",
+  maxFps: "",
+  backtraceEnabled: true,
   noVid: true,
   showFps: "0",
   reservedCores: "-1",
@@ -157,6 +159,7 @@ export function buildLaunchArgumentsPreview(settings: LaunchSettings) {
   if (settings.offlineMode) args.push("-offline");
 
   if (settings.noVid) args.push("-novid");
+  args.push(settings.backtraceEnabled ? "+backtrace_enable 1" : "+backtrace_enable 0");
   if (settings.showFps && settings.showFps !== "0") args.push(`+cl_showfps ${settings.showFps}`);
   if (settings.showPos) args.push("+cl_showpos 1");
   if (settings.showDebugInfo) args.push("+pylon_showdebuginfo 1");

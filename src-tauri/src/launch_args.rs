@@ -62,6 +62,11 @@ pub(crate) fn build_launch_args(options: &LaunchOptions) -> Result<Vec<String>, 
     if options.no_vid {
         args.push("-novid".into());
     }
+    push_pair(
+        &mut args,
+        "+backtrace_enable",
+        if options.backtrace_enabled { "1" } else { "0" },
+    );
     if options.show_fps != "0" && !options.show_fps.trim().is_empty() {
         push_pair(&mut args, "+cl_showfps", &options.show_fps);
     }

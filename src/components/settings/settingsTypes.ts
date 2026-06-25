@@ -18,6 +18,9 @@ export type GameSettingsPageProps = {
 export type LauncherSettingsPageProps = {
   launcherSettings: LauncherSettings;
   launcherVersion: string;
+  gameInstalled: boolean;
+  gameInstallDir: string | null;
+  onOpenGameLocation: () => void;
   onRequestHdTexturesChange: (enabled: boolean) => void;
   onVerifyGameFiles: () => void;
   verifyGameFilesDisabled: boolean;

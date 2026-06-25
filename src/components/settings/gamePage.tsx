@@ -88,6 +88,10 @@ export default function SettingsGamePage({
     setField("maxFps", value);
   };
   const handleMaxFpsInputBlur = () => {
+    if (settings.maxFps.trim() === "") {
+      return;
+    }
+
     setField("maxFps", normalizeMaxFps(Number.parseInt(settings.maxFps || "0", 10) || 0).toString());
   };
 
@@ -223,7 +227,7 @@ export default function SettingsGamePage({
               max={300}
               step={1}
               value={settings.maxFps}
-              placeholder="0"
+              placeholder=""
               onChange={(event) => handleMaxFpsInputChange(event.target.value)}
               onBlur={handleMaxFpsInputBlur}
               onMouseEnter={playSettingsHover}
@@ -324,6 +328,12 @@ export default function SettingsGamePage({
       <Group title="Advanced">
         <Row label="Skip Intro Video" hint="Faster startup (-novid)">
           <TwoWay checked={settings.noVid} onChange={(value) => setField("noVid", value)} />
+        </Row>
+        <Row label="Backtrace" hint="Enable engine backtraces for debugging crashes">
+          <TwoWay
+            checked={settings.backtraceEnabled}
+            onChange={(value) => setField("backtraceEnabled", value)}
+          />
         </Row>
         <Row label="Disable Async Systems" hint="Force synchronous loading - may help with crashes on older CPUs">
           <TwoWay checked={settings.noAsync} onChange={(value) => setField("noAsync", value)} />

@@ -389,6 +389,8 @@ export function useLauncherController() {
       }
     },
     currentLaunchSettings,
+    gameInstallDir: gameState?.installDir ?? null,
+    gameInstalled: Boolean(gameState?.installed),
     canVerifyGameFiles,
     gameActionDisabled: Boolean(gameActionDisabled),
     gameBusy: effectiveBusy,

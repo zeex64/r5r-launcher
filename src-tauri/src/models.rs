@@ -218,6 +218,7 @@ pub struct LaunchOptions {
     pub(crate) res_w: String,
     pub(crate) res_h: String,
     pub(crate) max_fps: String,
+    pub(crate) backtrace_enabled: bool,
     pub(crate) no_vid: bool,
     pub(crate) show_fps: String,
     pub(crate) reserved_cores: String,

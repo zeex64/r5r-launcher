@@ -27,12 +27,18 @@ import SettingsCreditsPage from "./creditsPage";
 export default function SettingsView({
   section,
   onBack,
+  gameInstalled,
+  gameInstallDir,
+  onOpenGameLocation,
   onRequestHdTexturesChange,
   onVerifyGameFiles,
   verifyGameFilesDisabled,
 }: {
   section: SettingsNavId;
   onBack: () => void;
+  gameInstalled: boolean;
+  gameInstallDir: string | null;
+  onOpenGameLocation: () => void;
   onRequestHdTexturesChange: (enabled: boolean) => void;
   onVerifyGameFiles: () => void;
   verifyGameFilesDisabled: boolean;
@@ -181,6 +187,9 @@ export default function SettingsView({
         <SettingsLauncherPage
           launcherSettings={launcherSettings}
           launcherVersion={launcherVersion}
+          gameInstalled={gameInstalled}
+          gameInstallDir={gameInstallDir}
+          onOpenGameLocation={onOpenGameLocation}
           onRequestHdTexturesChange={onRequestHdTexturesChange}
           onVerifyGameFiles={onVerifyGameFiles}
           verifyGameFilesDisabled={verifyGameFilesDisabled}

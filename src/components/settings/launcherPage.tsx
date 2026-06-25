@@ -1,9 +1,13 @@
+import { openPath } from "@tauri-apps/plugin-opener";
 import { Group, Row, TwoWay, Button } from "../ui/Controls";
 import type { LauncherSettingsPageProps } from "./settingsTypes";
 
 export default function SettingsLauncherPage({
   launcherSettings,
   launcherVersion,
+  gameInstalled,
+  gameInstallDir,
+  onOpenGameLocation,
   onRequestHdTexturesChange,
   onVerifyGameFiles,
   verifyGameFilesDisabled,
@@ -60,6 +64,23 @@ export default function SettingsLauncherPage({
             className="w-full justify-center"
           >
             Verify
+          </Button>
+        </div>
+      </Row>
+      <Row label="Open Game Location" hint="Open the current install folder in File Explorer">
+        <div className="flex justify-end">
+          <Button
+            onClick={() => {
+              if (!gameInstallDir) {
+                return;
+              }
+              void openPath(gameInstallDir);
+              onOpenGameLocation();
+            }}
+            disabled={!gameInstalled || !gameInstallDir}
+            className="w-full justify-center"
+          >
+            Open Folder
           </Button>
         </div>
       </Row>

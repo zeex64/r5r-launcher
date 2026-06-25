@@ -43,6 +43,8 @@ export default function App() {
     gameActionDisabled,
     gameBusy,
     gameButtonLabel,
+    gameInstallDir,
+    gameInstalled,
     gameStatusText,
     handleLegacyInstallMigration,
     handleGameAction,
@@ -140,6 +142,9 @@ export default function App() {
           <SettingsView
             section={settingsSection}
             onBack={() => setActive("play")}
+            gameInstalled={gameInstalled}
+            gameInstallDir={gameInstallDir}
+            onOpenGameLocation={() => {}}
             onRequestHdTexturesChange={handleHdTexturesToggleRequest}
             onVerifyGameFiles={() => {
               void handleVerifyGameFiles();
