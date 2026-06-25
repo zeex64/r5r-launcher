@@ -192,11 +192,7 @@ pub async fn get_game_install_state(
                     installed_version: installed_version.clone(),
                     remote_version: Some(remote.manifest.game_version.clone()),
                     button_label: "UPDATE".into(),
-                    status_text: format!(
-                        "Installed v{} - Update v{} available",
-                        installed_version.unwrap_or_else(|| "Unknown".into()),
-                        remote.manifest.game_version
-                    ),
+                    status_text: format!("Update v{} available", remote.manifest.game_version),
                     needs_update: true,
                     busy,
                     error: None,

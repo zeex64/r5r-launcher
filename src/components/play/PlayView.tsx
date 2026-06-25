@@ -8,6 +8,7 @@ type PlayViewProps = {
   onSettings: () => void;
   onGameAction: () => void;
   onGameActionMouseDown: () => void;
+  onLaunchAnyway: () => void;
   gameButtonLabel: string;
   gameStatusText: string;
   progressPercent: number;
@@ -15,6 +16,7 @@ type PlayViewProps = {
   progressFile: string | null;
   gameBusy: boolean;
   gameActionDisabled: boolean;
+  canLaunchAnyway: boolean;
   statusColorClass: string;
 };
 
@@ -23,6 +25,7 @@ export default function PlayView({
   onSettings,
   onGameAction,
   onGameActionMouseDown,
+  onLaunchAnyway,
   gameButtonLabel,
   gameStatusText,
   progressPercent,
@@ -30,6 +33,7 @@ export default function PlayView({
   progressFile,
   gameBusy,
   gameActionDisabled,
+  canLaunchAnyway,
   statusColorClass,
 }: PlayViewProps) {
   const primaryProgressLabel = gameBusy ? gameStatusText : progressFile || "Preparing files";
@@ -50,10 +54,12 @@ export default function PlayView({
             <PlayButton
               onPrimaryAction={onGameAction}
               onPrimaryMouseDown={onGameActionMouseDown}
+              onLaunchAnyway={onLaunchAnyway}
               buttonLabel={gameButtonLabel}
               statusText={gameStatusText}
               busy={gameBusy}
               disabled={gameActionDisabled}
+              canLaunchAnyway={canLaunchAnyway}
               statusColorClass={statusColorClass}
             />
           </div>

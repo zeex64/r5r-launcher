@@ -47,9 +47,11 @@ export default function App() {
     gameInstallDir,
     gameInstalled,
     gameStatusText,
+    canLaunchAnyway,
     handleLegacyInstallMigration,
     handleGameAction,
     handleGameActionMouseDown,
+    handleLaunchAnyway,
     handleLauncherUpdate,
     handleHdTexturesToggleRequest,
     handleVerifyGameFiles,
@@ -108,6 +110,9 @@ export default function App() {
             onSettings={() => setActive("settings")}
             onGameAction={handleGameAction}
             onGameActionMouseDown={handleGameActionMouseDown}
+            onLaunchAnyway={() => {
+              void handleLaunchAnyway();
+            }}
             gameButtonLabel={gameButtonLabel}
             gameStatusText={gameStatusText}
             progressPercent={progressPercent}
@@ -115,6 +120,7 @@ export default function App() {
             progressFile={progressFile}
             gameBusy={gameBusy}
             gameActionDisabled={gameActionDisabled}
+            canLaunchAnyway={canLaunchAnyway}
             statusColorClass={statusColorClass}
           />
         ) : active === "news" ? (

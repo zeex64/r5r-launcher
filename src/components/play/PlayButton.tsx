@@ -1,26 +1,43 @@
 import { ASSETS } from "../../config/assets";
-import { playNavHover } from "../../lib/uiSound";
+import { playNavHover, playSettingsClick, playSettingsHover } from "../../lib/uiSound";
 
 type PlayButtonProps = {
   onPrimaryAction: () => void;
   onPrimaryMouseDown: () => void;
+  onLaunchAnyway?: () => void;
   buttonLabel: string;
   statusText: string;
   busy: boolean;
   disabled: boolean;
+  canLaunchAnyway?: boolean;
   statusColorClass: string;
 };
 
 function PlayStatus({
   statusText,
   statusColorClass,
-}: Pick<PlayButtonProps, "statusText" | "statusColorClass">) {
+  onLaunchAnyway,
+  canLaunchAnyway,
+}: Pick<PlayButtonProps, "statusText" | "statusColorClass" | "onLaunchAnyway" | "canLaunchAnyway">) {
   return (
-    <div className="flex items-center gap-2 whitespace-nowrap px-1">
-      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusColorClass}`} />
-      <span className="font-cond text-[11px] uppercase tracking-wide text-ink-dim">
-        {statusText}
-      </span>
+    <div className="flex items-center gap-3 whitespace-nowrap px-1">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusColorClass}`} />
+        <span className="truncate font-cond text-[11px] uppercase tracking-wide text-ink-dim">
+          {statusText}
+        </span>
+      </div>
+      {canLaunchAnyway ? (
+        <button
+          type="button"
+          onClick={onLaunchAnyway}
+          onMouseEnter={playSettingsHover}
+          onMouseDown={playSettingsClick}
+          className="shrink-0 font-cond text-[11px] uppercase tracking-[0.08em] text-white/72 transition-colors hover:text-white"
+        >
+          Launch Anyway
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -39,16 +56,25 @@ function PlayButtonFrame() {
 export default function PlayButton({
   onPrimaryAction,
   onPrimaryMouseDown,
+  onLaunchAnyway,
   buttonLabel,
   statusText,
   busy,
   disabled,
+  canLaunchAnyway,
   statusColorClass,
 }: PlayButtonProps) {
   return (
     <div className="min-w-0 text-legible">
       <div className="relative flex flex-col gap-3">
-        {!busy ? <PlayStatus statusText={statusText} statusColorClass={statusColorClass} /> : null}
+        {!busy ? (
+          <PlayStatus
+            statusText={statusText}
+            statusColorClass={statusColorClass}
+            onLaunchAnyway={onLaunchAnyway}
+            canLaunchAnyway={canLaunchAnyway}
+          />
+        ) : null}
 
         <div className="flex items-end gap-3">
           <button

@@ -282,6 +282,48 @@ export function useLauncherController() {
     }
   };
 
+  const handleLaunchAnyway = async () => {
+    if (
+      !gameState ||
+      !gameState.installed ||
+      !gameState.needsUpdate ||
+      gameState.buttonLabel !== "UPDATE" ||
+      effectiveBusy ||
+      launchPending ||
+      (!isDedicatedMode && gameRuntimeStatus.running)
+    ) {
+      return;
+    }
+
+    try {
+      setGameActionError(null);
+      setGameProgress(null);
+      setLaunchPending(true);
+      await invoke("launch_game", { options: currentLaunchSettings });
+      if (currentLauncherSettings.closeAfterGameStarts) {
+        await getCurrentWindow().close();
+        return;
+      }
+      if (!isDedicatedMode) {
+        window.setTimeout(() => {
+          void loadGameRuntimeStatus();
+        }, 500);
+        window.setTimeout(() => {
+          setLaunchPending(false);
+          void loadGameRuntimeStatus();
+        }, 10_000);
+      } else {
+        window.setTimeout(() => {
+          setLaunchPending(false);
+        }, 800);
+      }
+    } catch (error: unknown) {
+      setLaunchPending(false);
+      setGameProgress(null);
+      setGameActionError(getAppError(error, "We couldn't launch the current install."));
+    }
+  };
+
   const effectiveBusy = Boolean(gameState?.busy);
   const blockingInstallDirError = gameActionError?.code === "INSTALL_DIR_NOT_EMPTY";
   const overlayMessage = gameActionError?.message ?? null;
@@ -334,6 +376,13 @@ export function useLauncherController() {
     !effectiveBusy &&
     !launchPending &&
     !optionalContentBusy;
+  const canLaunchAnyway =
+    Boolean(gameState?.installed) &&
+    Boolean(gameState?.needsUpdate) &&
+    gameState?.buttonLabel === "UPDATE" &&
+    !effectiveBusy &&
+    !launchPending &&
+    (isDedicatedMode || !gameRuntimeStatus.running);
   const showLegacyInstallOverlay = Boolean(legacyInstallInfo) || legacyMigrationBusy;
   const canPromptLauncherUpdate =
     !launcherUpdateBusy &&
@@ -391,12 +440,14 @@ export function useLauncherController() {
     currentLaunchSettings,
     gameInstallDir: gameState?.installDir ?? null,
     gameInstalled: Boolean(gameState?.installed),
+    canLaunchAnyway,
     canVerifyGameFiles,
     gameActionDisabled: Boolean(gameActionDisabled),
     gameBusy: effectiveBusy,
     gameButtonLabel,
     gameStatusText,
     handleGameAction,
+    handleLaunchAnyway,
     handleGameActionMouseDown: () => {
       if (!gameState) return;
       if (
