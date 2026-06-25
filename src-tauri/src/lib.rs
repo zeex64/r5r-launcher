@@ -24,6 +24,7 @@ pub fn run() {
             launcher::get_game_runtime_status,
             launcher::get_master_server_status,
             launcher::get_primary_monitor_resolutions,
+            launcher::open_game_install_dir,
             launcher::remove_optional_content,
             launcher::set_mod_enabled_state,
             launcher::start_legacy_install_migration_command,

@@ -1,4 +1,3 @@
-import { openPath } from "@tauri-apps/plugin-opener";
 import { Group, Row, TwoWay, Button } from "../ui/Controls";
 import type { LauncherSettingsPageProps } from "./settingsTypes";
 
@@ -71,10 +70,6 @@ export default function SettingsLauncherPage({
         <div className="flex justify-end">
           <Button
             onClick={() => {
-              if (!gameInstallDir) {
-                return;
-              }
-              void openPath(gameInstallDir);
               onOpenGameLocation();
             }}
             disabled={!gameInstalled || !gameInstallDir}

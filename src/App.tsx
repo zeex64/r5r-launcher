@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import TopNav, { type NavId, type SettingsNavId } from "./components/layout/TopNav";
 import HeroBackdrop from "./components/layout/HeroBackdrop";
 import ModsView from "./components/mods/ModsView";
@@ -144,7 +145,9 @@ export default function App() {
             onBack={() => setActive("play")}
             gameInstalled={gameInstalled}
             gameInstallDir={gameInstallDir}
-            onOpenGameLocation={() => {}}
+            onOpenGameLocation={() => {
+              void invoke("open_game_install_dir");
+            }}
             onRequestHdTexturesChange={handleHdTexturesToggleRequest}
             onVerifyGameFiles={() => {
               void handleVerifyGameFiles();

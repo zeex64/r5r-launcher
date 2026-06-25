@@ -301,6 +301,18 @@ pub async fn launch_game(options: LaunchOptions) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn open_game_install_dir() -> Result<(), String> {
+    let install_dir = get_install_dir()?;
+
+    Command::new("explorer")
+        .arg(&install_dir)
+        .spawn()
+        .map_err(|error| format!("Failed to open install folder: {error}"))?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn get_master_server_status() -> Result<MasterServerStatus, String> {
     let client = build_http_client()?;
     let reachable = is_master_server_reachable(&client, &master_server_url("https")).await
